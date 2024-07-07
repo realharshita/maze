@@ -1,5 +1,6 @@
 import tkinter as tk
 import random
+import time
 
 def generate_maze(canvas, maze_width, maze_height, cell_size):
     for i in range(maze_width):
@@ -61,12 +62,13 @@ def create_maze_grid(maze_width, maze_height):
     return maze_grid
 
 def check_win():
-    global player_pos, goal_pos
+    global player_pos, goal_pos, timer_running
     if player_pos == goal_pos:
         canvas.create_text(window_width // 2, window_height // 2, text="You Win!", font=("Arial", 24, "bold"), fill="green")
+        timer_running = False
 
 def reset_game():
-    global maze_grid, player_pos
+    global maze_grid, player_pos, timer_running, start_time, elapsed_time
     maze_grid = create_maze_grid(maze_width, maze_height)
     canvas.delete("all")
     draw_goal(canvas, maze_width, maze_height, cell_size)
@@ -79,6 +81,23 @@ def reset_game():
             else:
                 canvas.create_rectangle(x1, y1, x2, y2, outline="black", fill="white")
     draw_player(canvas, cell_size)
+    timer_running = True
+    start_time = time.time()
+    elapsed_time = 0
+    update_timer()
+
+def update_timer():
+    global timer_running, elapsed_time
+    if timer_running:
+        elapsed_time = int(time.time() - start_time)
+        timer_label.config(text=f"Time: {elapsed_time} seconds")
+        root.after(1000, update_timer)
+
+def toggle_pause():
+    global timer_running
+    timer_running = not timer_running
+    if timer_running:
+        update_timer()
 
 root = tk.Tk()
 root.title("Maze Game")
@@ -111,5 +130,16 @@ canvas.bind_all("<KeyPress>", move_player)
 
 reset_button = tk.Button(root, text="Reset Game", command=reset_game)
 reset_button.pack()
+
+timer_label = tk.Label(root, text="Time: 0 seconds", font=("Arial", 16))
+timer_label.pack()
+
+pause_button = tk.Button(root, text="Pause/Resume", command=toggle_pause)
+pause_button.pack()
+
+timer_running = True
+start_time = time.time()
+elapsed_time = 0
+update_timer()
 
 root.mainloop()
