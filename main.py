@@ -37,6 +37,7 @@ def move_player(event):
     if is_valid_move(new_pos):
         player_pos = new_pos
         redraw_canvas()
+        check_win()
 
 def is_valid_move(new_pos):
     global maze_grid
@@ -61,7 +62,23 @@ def create_maze_grid(maze_width, maze_height):
 
 def check_win():
     global player_pos, goal_pos
-    return player_pos == goal_pos
+    if player_pos == goal_pos:
+        canvas.create_text(window_width // 2, window_height // 2, text="You Win!", font=("Arial", 24, "bold"), fill="green")
+
+def reset_game():
+    global maze_grid, player_pos
+    maze_grid = create_maze_grid(maze_width, maze_height)
+    canvas.delete("all")
+    draw_goal(canvas, maze_width, maze_height, cell_size)
+    for i in range(maze_width):
+        for j in range(maze_height):
+            x1, y1 = i * cell_size, j * cell_size
+            x2, y2 = x1 + cell_size, y1 + cell_size
+            if maze_grid[j][i]:
+                canvas.create_rectangle(x1, y1, x2, y2, outline="", fill="black")
+            else:
+                canvas.create_rectangle(x1, y1, x2, y2, outline="black", fill="white")
+    draw_player(canvas, cell_size)
 
 root = tk.Tk()
 root.title("Maze Game")
@@ -91,5 +108,8 @@ for i in range(maze_width):
 
 draw_player(canvas, cell_size)
 canvas.bind_all("<KeyPress>", move_player)
+
+reset_button = tk.Button(root, text="Reset Game", command=reset_game)
+reset_button.pack()
 
 root.mainloop()
