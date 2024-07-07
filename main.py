@@ -99,6 +99,32 @@ def toggle_pause():
     if timer_running:
         update_timer()
 
+def save_maze():
+    with open("maze_save.txt", "w") as file:
+        for row in maze_grid:
+            file.write("".join(["1" if cell else "0" for cell in row]) + "\n")
+
+def load_maze():
+    global maze_grid, player_pos, timer_running, start_time
+    with open("maze_save.txt", "r") as file:
+        lines = file.readlines()
+    maze_grid = [[True if cell == "1" else False for cell in line.strip()] for line in lines]
+    canvas.delete("all")
+    draw_goal(canvas, maze_width, maze_height, cell_size)
+    for i in range(maze_width):
+        for j in range(maze_height):
+            x1, y1 = i * cell_size, j * cell_size
+            x2, y2 = x1 + cell_size, y1 + cell_size
+            if maze_grid[j][i]:
+                canvas.create_rectangle(x1, y1, x2, y2, outline="", fill="black")
+            else:
+                canvas.create_rectangle(x1, y1, x2, y2, outline="black", fill="white")
+    draw_player(canvas, cell_size)
+    timer_running = True
+    start_time = time.time()
+    elapsed_time = 0
+    update_timer()
+
 root = tk.Tk()
 root.title("Maze Game")
 
@@ -136,6 +162,12 @@ timer_label.pack()
 
 pause_button = tk.Button(root, text="Pause/Resume", command=toggle_pause)
 pause_button.pack()
+
+save_button = tk.Button(root, text="Save Game", command=save_maze)
+save_button.pack()
+
+load_button = tk.Button(root, text="Load Game", command=load_maze)
+load_button.pack()
 
 timer_running = True
 start_time = time.time()
