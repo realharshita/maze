@@ -75,7 +75,7 @@ def check_win():
             reset_game()
 
 def reset_game():
-    global maze_grid, player_pos, timer_running, start_time, elapsed_time
+    global maze_grid, player_pos, timer_running, start_time, elapsed_time, obstacles_remaining
     maze_grid = create_maze_grid(maze_width, maze_height)
     canvas.delete("all")
     draw_goal(canvas, maze_width, maze_height, cell_size)
@@ -92,6 +92,8 @@ def reset_game():
     start_time = time.time()
     elapsed_time = 0
     update_timer()
+    obstacles_remaining = sum(sum(row) for row in maze_grid)
+    update_obstacles_remaining()
 
 def update_timer():
     global timer_running, elapsed_time
@@ -162,6 +164,9 @@ def display_instructions():
 def show_winning_message():
     canvas.create_text(window_width // 2, window_height // 2, text=f"Congratulations! You Win!\nScore: {score}", font=("Arial", 24, "bold"), fill="green")
 
+def update_obstacles_remaining():
+    obstacles_label.config(text=f"Obstacles Remaining: {obstacles_remaining}")
+
 def key_bindings(event):
     if event.keysym in ["Up", "Down", "Left", "Right"]:
         move_player(event)
@@ -187,6 +192,7 @@ cell_size = window_width // maze_width
 max_level = 5
 current_level = 1
 score = 0
+obstacles_remaining = 0
 
 maze_grid = create_maze_grid(maze_width, maze_height)
 draw_goal(canvas, maze_width, maze_height, cell_size)
@@ -201,13 +207,14 @@ for i in range(maze_width):
             canvas.create_rectangle(x1, y1, x2, y2, outline="black", fill="white")
 
 draw_player(canvas, cell_size)
-canvas.bind_all("<KeyPress>", move_player)
 
-reset_button = tk.Button(root, text="Reset Game", command=reset_game)
-reset_button.pack()
+root.bind("<Key>", key_bindings)
 
-timer_label = tk.Label(root, text="Time: 0 seconds", font=("Arial", 16))
+timer_label = tk.Label(root, text="Time: 0 seconds", font=("Arial", 12))
 timer_label.pack()
+
+obstacles_label = tk.Label(root, text=f"Obstacles Remaining: {obstacles_remaining}", font=("Arial", 12))
+obstacles_label.pack()
 
 pause_button = tk.Button(root, text="Pause/Resume", command=toggle_pause)
 pause_button.pack()
