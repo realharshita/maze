@@ -19,7 +19,9 @@ def draw_player(canvas, cell_size):
 
 def draw_goal(canvas, maze_width, maze_height, cell_size):
     global goal_pos
-    goal_pos = (maze_width - 1, maze_height - 1)
+    goal_pos = (random.randint(0, maze_width-1), random.randint(0, maze_height-1))
+    while goal_pos == (0, 0):  # Ensure goal is not at the starting position
+        goal_pos = (random.randint(0, maze_width-1), random.randint(0, maze_height-1))
     x1, y1 = goal_pos[0] * cell_size, goal_pos[1] * cell_size
     x2, y2 = x1 + cell_size, y1 + cell_size
     canvas.create_rectangle(x1, y1, x2, y2, outline="", fill="green", tags="goal")
@@ -62,10 +64,15 @@ def create_maze_grid(maze_width, maze_height):
     return maze_grid
 
 def check_win():
-    global player_pos, goal_pos, timer_running
+    global player_pos, goal_pos, timer_running, current_level, score
     if player_pos == goal_pos:
-        canvas.create_text(window_width // 2, window_height // 2, text="You Win!", font=("Arial", 24, "bold"), fill="green")
         timer_running = False
+        score += max(0, 100 - elapsed_time)
+        current_level += 1
+        if current_level > max_level:
+            show_winning_message()
+        else:
+            reset_game()
 
 def reset_game():
     global maze_grid, player_pos, timer_running, start_time, elapsed_time
@@ -125,6 +132,44 @@ def load_maze():
     elapsed_time = 0
     update_timer()
 
+def set_difficulty(level):
+    global maze_width, maze_height, cell_size, current_level, score
+    if level == 1:
+        maze_width = 10
+        maze_height = 10
+    elif level == 2:
+        maze_width = 15
+        maze_height = 15
+    elif level == 3:
+        maze_width = 20
+        maze_height = 20
+    cell_size = window_width // maze_width
+    current_level = 1
+    score = 0
+    reset_game()
+
+def display_instructions():
+    instructions = """
+    Instructions:
+    Use arrow keys to move the blue player.
+    Reach the green goal to complete the level.
+    Avoid the black obstacles.
+    Press 'P' to pause/resume the game.
+    Press 'R' to reset the game.
+    """
+    instruction_label.config(text=instructions)
+
+def show_winning_message():
+    canvas.create_text(window_width // 2, window_height // 2, text=f"Congratulations! You Win!\nScore: {score}", font=("Arial", 24, "bold"), fill="green")
+
+def key_bindings(event):
+    if event.keysym in ["Up", "Down", "Left", "Right"]:
+        move_player(event)
+    elif event.keysym == "p":
+        toggle_pause()
+    elif event.keysym == "r":
+        reset_game()
+
 root = tk.Tk()
 root.title("Maze Game")
 
@@ -138,6 +183,10 @@ canvas.pack()
 maze_width = 10
 maze_height = 10
 cell_size = window_width // maze_width
+
+max_level = 5
+current_level = 1
+score = 0
 
 maze_grid = create_maze_grid(maze_width, maze_height)
 draw_goal(canvas, maze_width, maze_height, cell_size)
@@ -169,9 +218,21 @@ save_button.pack()
 load_button = tk.Button(root, text="Load Game", command=load_maze)
 load_button.pack()
 
-timer_running = True
-start_time = time.time()
-elapsed_time = 0
-update_timer()
+difficulty_frame = tk.Frame(root)
+difficulty_frame.pack()
+
+easy_button = tk.Button(difficulty_frame, text="Easy", command=lambda: set_difficulty(1))
+easy_button.pack(side="left")
+
+medium_button = tk.Button(difficulty_frame, text="Medium", command=lambda: set_difficulty(2))
+medium_button.pack(side="left")
+
+hard_button = tk.Button(difficulty_frame, text="Hard", command=lambda: set_difficulty(3))
+hard_button.pack(side="left")
+
+instruction_label = tk.Label(root, text="", font=("Arial", 12))
+instruction_label.pack()
+
+display_instructions()
 
 root.mainloop()
